@@ -131,7 +131,7 @@ export default function LoginPage() {
           </form>
 
           <p className="text-center text-muted text-xs mt-6">
-            Accounts are created by an administrator. Contact your admin for access.
+            
           </p>
         </div>
 
