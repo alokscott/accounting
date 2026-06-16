@@ -47,7 +47,6 @@ type ApiDeposit = {
   userId: string
   amount: number
   depositDate: string
-  createdAt: string
   firstWeekStart: string
   interestStartDate: string
   completeWeeks: number
@@ -222,7 +221,6 @@ export async function GET(request: Request) {
         userId: row.user_id,
         amount: roundMoney(amount),
         depositDate: row.deposit_date,
-        createdAt: row.created_at,
         firstWeekStart: toDateOnly(getFirstWeekStart(depositDate)),
         interestStartDate: toDateOnly(getInterestStartDate(depositDate)),
         completeWeeks: getCompleteWeeks(depositDate),
