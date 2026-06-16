@@ -1,0 +1,1 @@
+INSERT INTO "public"."clients" ("id", "name", "wallet_address", "api_key", "api_secret", "created_at") VALUES ('cmp_ZVsWOFqVpB', 'Altura Defi Ltd', null, 'ak_605add6445ce45609b567ac1a7e4b9cd', 'sk_f14d252197724932bbe84fc556561467ec27b913043442119d0e9a952640e54b', '2026-01-12 19:07:56.905772+00');
