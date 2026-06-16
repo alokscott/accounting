@@ -15,7 +15,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Altura Accounting",
+  title: " InessaHoldings",
   description: "Fund deployment tracking with weekly compound interest",
 };
 
