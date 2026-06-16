@@ -53,7 +53,7 @@ export default function LoginPage() {
               />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">InessaHoldings</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Inessa Holdings</h1>
           <p className="text-muted mt-2">Fund deployment tracking system</p>
         </div>
 
