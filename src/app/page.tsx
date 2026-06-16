@@ -137,7 +137,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p className="text-center text-muted text-sm mt-6 animate-fade-in stagger-2" style={{ opacity: 0 }}>
-          0.5% weekly compound interest calculator
+          
         </p>
         </div>
       </main>
