@@ -192,7 +192,6 @@ export async function GET(request: Request) {
           id: d.id,
           amount: roundMoney(amount),
           depositDate: d.deposit_date,
-          createdAt: d.created_at,
           firstWeekStart: toDateOnly(getFirstWeekStart(depositDate)),
           interestStartDate: toDateOnly(getInterestStartDate(depositDate)),
           completeWeeks: getCompleteWeeks(depositDate),
