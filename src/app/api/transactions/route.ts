@@ -16,6 +16,8 @@ type DepositRow = {
   id: string
   amount: number | string
   deposit_date: string
+  current_value: number | string | null
+  interest_accrued: number | string | null
   created_at: string
 }
 
@@ -152,7 +154,7 @@ export async function GET(request: Request) {
     const clientId = company.id as string
 
     const [depositsResult, closuresResult, withdrawalsResult, allocationsResult] = await Promise.all([
-      supabase.from('deposits').select('id, amount, deposit_date, created_at').eq('client_id', clientId).order('deposit_date', { ascending: false }).order('created_at', { ascending: false }),
+      supabase.from('deposits').select('id, amount, deposit_date, current_value, interest_accrued, created_at').eq('client_id', clientId).order('deposit_date', { ascending: false }).order('created_at', { ascending: false }),
       supabase.from('closures').select('id, deposit_id, principal, interest_redeemed, total_payout, weeks_elapsed, closure_date').eq('client_id', clientId).order('closure_date', { ascending: false }),
       supabase.from('withdrawals').select('id, amount, interest_paid, total_payout, withdrawal_date, status, tx_hash, created_at').eq('client_id', clientId).order('withdrawal_date', { ascending: false }).order('created_at', { ascending: false }),
       supabase.from('withdrawal_allocations').select('deposit_id, principal_withdrawn, withdrawal_id'),
@@ -188,6 +190,15 @@ export async function GET(request: Request) {
       .map((d) => {
         const amount = toNumber(d.amount) - (withdrawnByDeposit.get(d.id) ?? 0)
         const depositDate = parseDate(d.deposit_date)
+        // Trust the stored current_value / interest_accrued snapshot (refreshed by
+        // the weekly recompound cron and the withdraw/reject RPCs); only fall back
+        // to a live compute when a row has no snapshot yet.
+        const currentValue = d.current_value != null
+          ? toNumber(d.current_value)
+          : calculateCurrentValue(amount, depositDate)
+        const interest = d.interest_accrued != null
+          ? toNumber(d.interest_accrued)
+          : calculateInterestEarned(amount, depositDate)
         return {
           id: d.id,
           amount: roundMoney(amount),
@@ -195,8 +206,8 @@ export async function GET(request: Request) {
           firstWeekStart: toDateOnly(getFirstWeekStart(depositDate)),
           interestStartDate: toDateOnly(getInterestStartDate(depositDate)),
           completeWeeks: getCompleteWeeks(depositDate),
-          interest: roundMoney(calculateInterestEarned(amount, depositDate)),
-          currentValue: roundMoney(calculateCurrentValue(amount, depositDate)),
+          interest: roundMoney(interest),
+          currentValue: roundMoney(currentValue),
         }
       })
 
