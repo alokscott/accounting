@@ -16,6 +16,8 @@ type DepositRow = {
   user_id: string
   amount: number | string
   deposit_date: string
+  current_value: number | string | null
+  interest_accrued: number | string | null
   created_at: string
 }
 
@@ -163,7 +165,7 @@ export async function GET(request: Request) {
 
     let depositsQuery = supabase
       .from('deposits')
-      .select('id, user_id, amount, deposit_date, created_at')
+      .select('id, user_id, amount, deposit_date, current_value, interest_accrued, created_at')
       .order('deposit_date', { ascending: false })
       .order('created_at', { ascending: false })
 
@@ -216,6 +218,16 @@ export async function GET(request: Request) {
       const amount = toNumber(row.amount) - (withdrawnByDeposit.get(row.id) ?? 0)
       const depositDate = parseDate(row.deposit_date)
 
+      // Trust the stored current_value / interest_accrued snapshot (refreshed by
+      // the weekly recompound cron and the withdraw/reject RPCs); only fall back
+      // to a live compute when a row has no snapshot yet.
+      const currentValue = row.current_value != null
+        ? toNumber(row.current_value)
+        : calculateCurrentValue(amount, depositDate)
+      const interest = row.interest_accrued != null
+        ? toNumber(row.interest_accrued)
+        : calculateInterestEarned(amount, depositDate)
+
       return {
         id: row.id,
         userId: row.user_id,
@@ -224,8 +236,8 @@ export async function GET(request: Request) {
         firstWeekStart: toDateOnly(getFirstWeekStart(depositDate)),
         interestStartDate: toDateOnly(getInterestStartDate(depositDate)),
         completeWeeks: getCompleteWeeks(depositDate),
-        interest: roundMoney(calculateInterestEarned(amount, depositDate)),
-        currentValue: roundMoney(calculateCurrentValue(amount, depositDate)),
+        interest: roundMoney(interest),
+        currentValue: roundMoney(currentValue),
       }
     })
 
