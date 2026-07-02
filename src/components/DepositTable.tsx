@@ -33,18 +33,17 @@ export default function DepositTable({ deposits, onRefresh, readOnly = false, sh
     withdrawn ? remainingPrincipal(deposit, withdrawn) : Number(deposit.amount)
 
   // Remaining principal + its current value & accrued interest, always kept
-  // consistent with each other. The stored current_value / interest_accrued
-  // columns are a DB snapshot that may not yet reflect a pending withdrawal's
-  // reservation, so once a deposit is partly withdrawn we recompute value and
-  // interest live from the remaining principal instead of trusting the snapshot.
+  // consistent with each other. Trust the stored current_value / interest_accrued
+  // snapshot (refreshed by the weekly recompound cron and by the withdraw/reject
+  // RPCs, which update it to the remaining principal). Only fall back to a live
+  // compute when a row has no snapshot yet.
   const valueOf = (deposit: DepositWithClient) => {
     const principal = principalOf(deposit)
-    const partlyWithdrawn = principal < Number(deposit.amount) - 0.005
     const depositDate = parseDate(deposit.deposit_date)
-    const currentValue = !partlyWithdrawn && deposit.current_value != null
+    const currentValue = deposit.current_value != null
       ? Number(deposit.current_value)
       : calculateCurrentValue(principal, depositDate)
-    const interest = !partlyWithdrawn && deposit.interest_accrued != null
+    const interest = deposit.interest_accrued != null
       ? Number(deposit.interest_accrued)
       : Math.max(0, currentValue - principal)
     return { principal, currentValue, interest }
