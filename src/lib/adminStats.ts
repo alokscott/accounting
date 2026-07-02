@@ -46,15 +46,14 @@ export function liveTotals(
   return deposits.reduce<Totals>(
     (acc, d) => {
       const principal = remaining(d, withdrawn)
-      // Read current_value/interest from the DB snapshot, but only when the
-      // deposit is untouched. Once it's partly withdrawn the snapshot may not
-      // yet reflect the reservation, so recompute live from the remaining
-      // principal (interest is linear in principal, so this is exact).
-      const partlyWithdrawn = principal < Number(d.amount) - EPS
-      const cv = !partlyWithdrawn && d.current_value != null
+      // Trust the DB snapshot for current_value / interest_accrued (refreshed by
+      // the weekly recompound cron and by the withdraw/reject RPCs, which update
+      // it to the remaining principal). Only fall back to a live compute when a
+      // row has no snapshot yet.
+      const cv = d.current_value != null
         ? Number(d.current_value)
         : calculateCurrentValue(principal, parseDate(d.deposit_date))
-      const interest = !partlyWithdrawn && d.interest_accrued != null
+      const interest = d.interest_accrued != null
         ? Number(d.interest_accrued)
         : Math.max(0, cv - principal)
       return {
